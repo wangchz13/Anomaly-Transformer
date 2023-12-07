@@ -8,6 +8,13 @@ from utils.utils import *
 from model.AnomalyTransformer import AnomalyTransformer
 from data_factory.data_loader import get_loader_segment
 
+def print_once(*message):
+    if not hasattr(print_once, "has_run"):
+        if message is not None:
+            print(message)
+        else:
+            print("Function is running")
+        print_once.has_run = True
 
 def my_kl_loss(p, q):
     res = p * (torch.log(p + 0.0001) - torch.log(q + 0.0001))
@@ -137,7 +144,7 @@ class Solver(object):
             os.makedirs(path)
         early_stopping = EarlyStopping(patience=3, verbose=True, dataset_name=self.dataset)
         train_steps = len(self.train_loader)
-
+        flag = False
         for epoch in range(self.num_epochs):
             iter_count = 0
             loss1_list = []
@@ -149,34 +156,27 @@ class Solver(object):
                 self.optimizer.zero_grad()
                 iter_count += 1
                 input = input_data.float().to(self.device)
-
+                
                 output, series, prior, _ = self.model(input)
-
+                if flag == False:
+                    print(output.shape,series[0].shape,prior[0].shape)
+                    flag = True
+                print('end.',i)
                 # calculate Association discrepancy
                 series_loss = 0.0
                 prior_loss = 0.0
                 for u in range(len(prior)):
-                    series_loss += (torch.mean(my_kl_loss(series[u], (
-                            prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                   self.win_size)).detach())) + torch.mean(
-                        my_kl_loss((prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                           self.win_size)).detach(),
-                                   series[u])))
-                    prior_loss += (torch.mean(my_kl_loss(
-                        (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)),
-                        series[u].detach())) + torch.mean(
-                        my_kl_loss(series[u].detach(), (
-                                prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                       self.win_size)))))
+                    temp = prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1, self.win_size)
+                    series_loss += (torch.mean(my_kl_loss(series[u], temp.detach())) + torch.mean(my_kl_loss(temp.detach(),series[u])))
+                    # prior_loss += (torch.mean(my_kl_loss(temp,series[u].detach())) + torch.mean(my_kl_loss(series[u].detach(), temp)))
                 series_loss = series_loss / len(prior)
-                prior_loss = prior_loss / len(prior)
-
+                # prior_loss = prior_loss / len(prior)
+                prior_loss = series_loss.clone()
                 rec_loss = self.criterion(output, input)
 
                 loss1_list.append((rec_loss - self.k * series_loss).item())
                 loss1 = rec_loss - self.k * series_loss
-                loss2 = rec_loss + self.k * prior_loss
+                loss2 = rec_loss + self.k * series_loss
 
                 if (i + 1) % 100 == 0:
                     speed = (time.time() - time_now) / iter_count
