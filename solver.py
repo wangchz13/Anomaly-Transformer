@@ -7,6 +7,7 @@ import time
 from utils.utils import *
 from model.AnomalyTransformer import AnomalyTransformer
 from data_factory.data_loader import get_loader_segment
+import random
 
 def print_once(*message):
     if not hasattr(print_once, "has_run"):
@@ -16,7 +17,7 @@ def print_once(*message):
             print("Function is running")
         print_once.has_run = True
 
-def weighted_mse_loss(X, Y, attention_indices, weight_factor):
+def weighted_mse_loss(X, Y, attention_indices=[], weight_factor=3):
     """
     计算带权重的均方误差（Weighted MSE）
 
@@ -30,15 +31,23 @@ def weighted_mse_loss(X, Y, attention_indices, weight_factor):
     - 带权重的均方误差
     """
     mse_loss = torch.nn.functional.mse_loss(X, Y, reduction='none')  # 计算未加权的均方误差
-
+    # print("mse_loss:",mse_loss.shape)
+    
+    # exit()
     # 根据关注的下标列表将对应项的误差放大
+    flag = True
     for index in attention_indices:
-        mse_loss[:, index] *= weight_factor
+        mse_loss[:, index,:] *= weight_factor
 
     weighted_mse = mse_loss.mean()  # 计算带权重的均方误差
-
+    # exit()
     return weighted_mse
 
+
+def random_reset(input,reset_index):
+    
+    res = torch.clone(input)
+    res[reset_index,:] = 0
 def my_kl_loss(p, q):
     res = p * (torch.log(p + 0.0001) - torch.log(q + 0.0001))
     return torch.mean(torch.sum(res, dim=-1), dim=1)
@@ -115,7 +124,7 @@ class Solver(object):
         self.build_model()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.criterion = nn.MSELoss()
-        
+        self.criterion = weighted_mse_loss
 
     def build_model(self):
         self.model = AnomalyTransformer(win_size=self.win_size, enc_in=self.input_c, c_out=self.output_c, e_layers=3)
@@ -131,6 +140,7 @@ class Solver(object):
         loss_2 = []
         for i, (input_data, _) in enumerate(vali_loader):
             input = input_data.float().to(self.device)
+            
             output, series, prior, _ = self.model(input)
             series_loss = 0.0
             prior_loss = 0.0
@@ -152,7 +162,7 @@ class Solver(object):
             # series_loss = series_loss / len(prior)
             # prior_loss = prior_loss / len(prior)
 
-            rec_loss = self.criterion(output, input)
+            rec_loss = self.criterion(output,input,[],10)
             loss_1.append((rec_loss - self.k * series_loss).item())
             loss_2.append((rec_loss + self.k * prior_loss).item())
 
@@ -176,12 +186,18 @@ class Solver(object):
             epoch_time = time.time()
             self.model.train()
             for i, (input_data, labels) in enumerate(self.train_loader):
-
+                
                 self.optimizer.zero_grad()
                 iter_count += 1
                 input = input_data.float().to(self.device)
-                
-                output, series, prior, _ = self.model(input)
+                reset_input = torch.clone(input)
+                l = input.shape[1]
+                reset_l = int(l*0.7)
+                reset_index = random.sample(range(l), reset_l)
+                reset_input[:,reset_index,:] = 0
+                # print(reset_input[0,reset_index,:])
+                # exit()
+                output, series, prior, _ = self.model(reset_input)
                 # if flag == False:
                 #     print(output.shape,series[0].shape,prior[0].shape)
                 #     flag = True
@@ -196,7 +212,8 @@ class Solver(object):
                 # series_loss = series_loss / len(prior)
                 # # prior_loss = prior_loss / len(prior)
                 # prior_loss = series_loss.clone()
-                rec_loss = self.criterion(output, input)
+                # rec_loss = self.criterion(output, input)
+                rec_loss = self.criterion(output,input,reset_index,3)
 
                 loss1_list.append((rec_loss - self.k * series_loss).item())
                 loss1 = rec_loss - self.k * series_loss
