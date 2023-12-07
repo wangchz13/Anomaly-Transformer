@@ -43,19 +43,19 @@ class AnomalyAttention(nn.Module):
             scores.masked_fill_(attn_mask.mask, -np.inf)
         attn = scale * scores
 
-        sigma = sigma.transpose(1, 2)  # B L H ->  B H L
-        window_size = attn.shape[-1]
-        sigma = torch.sigmoid(sigma * 5) + 1e-5
-        sigma = torch.pow(3, sigma) - 1
-        sigma = sigma.unsqueeze(-1).repeat(1, 1, 1, window_size)  # B H L L
-        prior = self.distances.unsqueeze(0).unsqueeze(0).repeat(sigma.shape[0], sigma.shape[1], 1, 1).cuda()
-        prior = 1.0 / (math.sqrt(2 * math.pi) * sigma) * torch.exp(-prior ** 2 / 2 / (sigma ** 2))
+        # sigma = sigma.transpose(1, 2)  # B L H ->  B H L
+        # window_size = attn.shape[-1]
+        # sigma = torch.sigmoid(sigma * 5) + 1e-5
+        # sigma = torch.pow(3, sigma) - 1
+        # sigma = sigma.unsqueeze(-1).repeat(1, 1, 1, window_size)  # B H L L
+        # prior = self.distances.unsqueeze(0).unsqueeze(0).repeat(sigma.shape[0], sigma.shape[1], 1, 1).cuda()
+        # prior = 1.0 / (math.sqrt(2 * math.pi) * sigma) * torch.exp(-prior ** 2 / 2 / (sigma ** 2))
 
         series = self.dropout(torch.softmax(attn, dim=-1))
         V = torch.einsum("bhls,bshd->blhd", series, values)
-
+        
         if self.output_attention:
-            return (V.contiguous(), series, prior, sigma)
+            return (V.contiguous(), series, 0, sigma)
         else:
             return (V.contiguous(), None)
 
@@ -89,13 +89,13 @@ class AttentionLayer(nn.Module):
         queries = self.query_projection(queries).view(B, L, H, -1)
         keys = self.key_projection(keys).view(B, S, H, -1)
         values = self.value_projection(values).view(B, S, H, -1)
-        sigma = self.sigma_projection(x).view(B, L, H)
-
+        # sigma = self.sigma_projection(x).view(B, L, H)
+        
         out, series, prior, sigma = self.inner_attention(
             queries,
             keys,
             values,
-            sigma,
+            0,
             attn_mask
         )
         out = out.view(B, L, -1)
