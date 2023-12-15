@@ -131,4 +131,4 @@ dataset/
 temp/
 checkpoints/
 .pth
-checkpoints/UCR_066_checkpoint.pth
+checkpoints/
