@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["--anormly_ratio","1" ,"--num_epochs" ,"3",
-            "--batch_size" ,"256"  ,"--mode" ,"train" ,"--dataset" ,"MSL"  ,"--data_path" ,"dataset/MSL" ,"--input_c" ,"55"    ,"--output_c" ,"55"]
+            "--batch_size" ,"16"  ,"--mode" ,"train" ,"--dataset" ,"UCR_066"  ,"--data_path" ,"dataset/MSL" ,"--input_c" ,"1"    ,"--output_c" ,"1","--win_size","25"]
         }
     ]
 }

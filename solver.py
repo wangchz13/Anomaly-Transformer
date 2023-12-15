@@ -186,18 +186,18 @@ class Solver(object):
             epoch_time = time.time()
             self.model.train()
             for i, (input_data, labels) in enumerate(self.train_loader):
-                
+                torch.save(input_data,str(i)+".tc")
                 self.optimizer.zero_grad()
                 iter_count += 1
                 input = input_data.float().to(self.device)
                 reset_input = torch.clone(input)
                 l = input.shape[1]
-                reset_l = int(l*0.7)
+                reset_l = int(l*0.5)
                 reset_index = random.sample(range(l), reset_l)
                 reset_input[:,reset_index,:] = 0
                 # print(reset_input[0,reset_index,:])
                 # exit()
-                output, series, prior, _ = self.model(reset_input)
+                output, series, prior, _ = self.model(input)
                 # if flag == False:
                 #     print(output.shape,series[0].shape,prior[0].shape)
                 #     flag = True
@@ -212,8 +212,8 @@ class Solver(object):
                 # series_loss = series_loss / len(prior)
                 # # prior_loss = prior_loss / len(prior)
                 # prior_loss = series_loss.clone()
-                # rec_loss = self.criterion(output, input)
-                rec_loss = self.criterion(output,input,reset_index,3)
+                rec_loss = self.criterion(output, input)
+                # rec_loss = self.criterion(output,input,reset_index,3)
 
                 loss1_list.append((rec_loss - self.k * series_loss).item())
                 loss1 = rec_loss - self.k * series_loss

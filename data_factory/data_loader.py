@@ -44,6 +44,7 @@ class UCRSegLoader(object):
         print("test:", self.test.shape)
         print("train:", self.train.shape)
         print("test_labels:",self.test_labels.shape)
+        print("step:",self.step)
         pass
 
     def __len__(self):
@@ -72,7 +73,6 @@ class UCRSegLoader(object):
             return np.float32(self.test[
                               index // self.step * self.win_size:index // self.step * self.win_size + self.win_size]), np.float32(
                 self.test_labels[index // self.step * self.win_size:index // self.step * self.win_size + self.win_size])
-                              
 
 
 class PSMSegLoader(object):
@@ -270,10 +270,12 @@ def get_loader_segment(data_path, batch_size, win_size=100, step=100, mode='trai
         dataset = SMAPSegLoader(data_path, win_size, 1, mode)
     elif (dataset == 'PSM'):
         dataset = PSMSegLoader(data_path, win_size, 1, mode)
-
+    elif (dataset.startswith("UCR")):
+        dataset = UCRSegLoader(win_size,dataset[-3:],25,mode)
+        
     shuffle = False
     if mode == 'train':
-        shuffle = True
+        shuffle = False
 
     data_loader = DataLoader(dataset=dataset,
                              batch_size=batch_size,
