@@ -197,7 +197,7 @@ class Solver(object):
                 reset_input[:,reset_index,:] = 0
                 # print(reset_input[0,reset_index,:])
                 # exit()
-                output, series, prior, _ = self.model(input)
+                output, series, prior, _ = self.model(reset_input)
                 # if flag == False:
                 #     print(output.shape,series[0].shape,prior[0].shape)
                 #     flag = True
@@ -212,8 +212,8 @@ class Solver(object):
                 # series_loss = series_loss / len(prior)
                 # # prior_loss = prior_loss / len(prior)
                 # prior_loss = series_loss.clone()
-                rec_loss = self.criterion(output, input)
-                # rec_loss = self.criterion(output,input,reset_index,3)
+                # rec_loss = self.criterion(output, input)
+                rec_loss = self.criterion(output,input,reset_index,3)
 
                 loss1_list.append((rec_loss - self.k * series_loss).item())
                 loss1 = rec_loss - self.k * series_loss
