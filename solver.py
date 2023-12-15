@@ -186,13 +186,13 @@ class Solver(object):
             epoch_time = time.time()
             self.model.train()
             for i, (input_data, labels) in enumerate(self.train_loader):
-                torch.save(input_data,str(i)+".tc")
+                # torch.save(input_data,str(i)+".tc")
                 self.optimizer.zero_grad()
                 iter_count += 1
                 input = input_data.float().to(self.device)
                 reset_input = torch.clone(input)
                 l = input.shape[1]
-                reset_l = int(l*0.5)
+                reset_l = int(l*0.2)
                 reset_index = random.sample(range(l), reset_l)
                 reset_input[:,reset_index,:] = 0
                 # print(reset_input[0,reset_index,:])
@@ -201,7 +201,7 @@ class Solver(object):
                 # if flag == False:
                 #     print(output.shape,series[0].shape,prior[0].shape)
                 #     flag = True
-                print('end.',i)
+                # print('end.',i)
                 # calculate Association discrepancy
                 series_loss = 0.0
                 prior_loss = 0.0
