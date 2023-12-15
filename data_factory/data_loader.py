@@ -12,7 +12,67 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import pickle
 
+class UCRSegLoader(object):
+    def __init__(self,  win_size,dnum="001",step=1,mode="train") -> None:
+        self.mode = mode
+        self.step = step
+        self.win_size = win_size
+        self.scaler = StandardScaler()
+        data_path = "D:/DATASETS/UCR"
+        all_files = os.listdir(data_path)
+        file = ""
+        for f in all_files:
+            if f.startswith(dnum):
+                file = f
+                break
+        data = pd.read_csv(data_path + '/' + file, header=None, index_col=None)
+        self.scaler.fit(data)
+        data = self.scaler.transform(data)
+        marks = file[:-4].split('_')[-3:]
+        train_start = 0
+        train_end = int(marks[0])
+        test_start = train_end+1
+        test_end = len(data)-1
+        ab_start = int(marks[1])
+        ab_end = int(marks[2])
+        self.train = data[:train_end]
+        self.test = data[train_end:]
+        self.val = self.test
+        self.test_labels = np.zeros((len(data),1))
+        self.test_labels[ab_start:ab_end+1] = 1
+        self.test_labels = self.test_labels[train_end:]
+        print("test:", self.test.shape)
+        print("train:", self.train.shape)
+        print("test_labels:",self.test_labels.shape)
+        pass
 
+    def __len__(self):
+        """
+        Number of images in the object dataset.
+        """
+        if self.mode == "train":
+            return (self.train.shape[0] - self.win_size) // self.step + 1
+        elif (self.mode == 'val'):
+            return (self.val.shape[0] - self.win_size) // self.step + 1
+        elif (self.mode == 'test'):
+            return (self.test.shape[0] - self.win_size) // self.step + 1
+        else:
+            return (self.test.shape[0] - self.win_size) // self.win_size + 1
+
+    def __getitem__(self, index):
+        index = index * self.step
+        if self.mode == "train":
+            return np.float32(self.train[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size])
+        elif (self.mode == 'val'):
+            return np.float32(self.val[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size])
+        elif (self.mode == 'test'):
+            return np.float32(self.test[index:index + self.win_size]), np.float32(
+                self.test_labels[index:index + self.win_size])
+        else:
+            return np.float32(self.test[
+                              index // self.step * self.win_size:index // self.step * self.win_size + self.win_size]), np.float32(
+                self.test_labels[index // self.step * self.win_size:index // self.step * self.win_size + self.win_size])
+                              
 class PSMSegLoader(object):
     def __init__(self, data_path, win_size, step, mode="train"):
         self.mode = mode
@@ -208,7 +268,8 @@ def get_loader_segment(data_path, batch_size, win_size=100, step=100, mode='trai
         dataset = SMAPSegLoader(data_path, win_size, 1, mode)
     elif (dataset == 'PSM'):
         dataset = PSMSegLoader(data_path, win_size, 1, mode)
-
+    elif (dataset.startswith("UCR")):
+        dataset = UCRSegLoader(win_size,dataset[-3:],step,mode)
     shuffle = False
     if mode == 'train':
         shuffle = True
