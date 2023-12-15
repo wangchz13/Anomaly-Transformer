@@ -130,3 +130,5 @@ dmypy.json
 dataset/
 temp/
 checkpoints/
+.pth
+checkpoints/UCR_066_checkpoint.pth
