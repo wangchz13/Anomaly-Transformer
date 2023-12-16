@@ -51,4 +51,5 @@ class DataEmbedding(nn.Module):
 
     def forward(self, x):
         x = self.value_embedding(x) + self.position_embedding(x)
+        # x = self.value_embedding(x)
         return self.dropout(x)
