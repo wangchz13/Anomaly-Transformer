@@ -6,7 +6,7 @@ import math
 
 
 class PositionalEmbedding(nn.Module):
-    def __init__(self, d_model, max_len=5000):
+    def __init__(self, d_model, max_len=500000):
         super(PositionalEmbedding, self).__init__()
         # Compute the positional encodings once in log space.
         pe = torch.zeros(max_len, d_model).float()
@@ -23,7 +23,10 @@ class PositionalEmbedding(nn.Module):
 
     def forward(self, x):
         return self.pe[:, :x.size(1)]
-
+    def forward(self, start,end=None):
+        if end is None:
+            return self.pe[:, :start.size(1)]
+        return self.pe[:,start:end].squeeze(dim=0).to('cuda:0')
 
 class TokenEmbedding(nn.Module):
     def __init__(self, c_in, d_model):
@@ -50,6 +53,7 @@ class DataEmbedding(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
-        # x = self.value_embedding(x) + self.position_embedding(x)
-        x = self.value_embedding(x)
+        # return x
+        x = self.value_embedding(x) + self.position_embedding(x)
+        # x = self.value_embedding(x)
         return self.dropout(x)

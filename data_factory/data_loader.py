@@ -11,6 +11,9 @@ import math
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import pickle
+from model.attn import AnomalyAttention, AttentionLayer
+from model.embed import DataEmbedding, PositionalEmbedding
+
 
 class UCRSegLoader(object):
     def __init__(self,  win_size,dnum="001",step=1,mode="train") -> None:
@@ -26,6 +29,7 @@ class UCRSegLoader(object):
                 file = f
                 break
         data = pd.read_csv(data_path + '/' + file, header=None, index_col=None)
+        self.position_embedding = PositionalEmbedding(d_model=512)
         self.scaler.fit(data)
         data = self.scaler.transform(data)
         marks = file[:-4].split('_')[-3:]
@@ -63,16 +67,15 @@ class UCRSegLoader(object):
     def __getitem__(self, index):
         index = index * self.step
         if self.mode == "train":
-            return np.float32(self.train[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size])
+            return np.float32(self.train[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size]),self.position_embedding(index,index + self.win_size)
         elif (self.mode == 'val'):
-            return np.float32(self.val[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size])
+            return np.float32(self.val[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size],),self.position_embedding(len(self.train)+ index,len(self.train)+index + self.win_size)
         elif (self.mode == 'test'):
-            return np.float32(self.test[index:index + self.win_size]), np.float32(
-                self.test_labels[index:index + self.win_size])
+            return np.float32(self.test[index:index + self.win_size]), np.float32(self.test_labels[index:index + self.win_size]),self.position_embedding(len(self.train)+ index,len(self.train)+index + self.win_size)
         else:
             return np.float32(self.test[
                               index // self.step * self.win_size:index // self.step * self.win_size + self.win_size]), np.float32(
-                self.test_labels[index // self.step * self.win_size:index // self.step * self.win_size + self.win_size])
+                self.test_labels[index // self.step * self.win_size:index // self.step * self.win_size + self.win_size]),self.position_embedding(len(self.train)+index // self.step * self.win_size,len(self.train)+index // self.step * self.win_size + self.win_size)
 
 
 class PSMSegLoader(object):
@@ -271,7 +274,7 @@ def get_loader_segment(data_path, batch_size, win_size=100, step=100, mode='trai
     elif (dataset == 'PSM'):
         dataset = PSMSegLoader(data_path, win_size, 1, mode)
     elif (dataset.startswith("UCR")):
-        dataset = UCRSegLoader(win_size,dataset[-3:],10,mode)
+        dataset = UCRSegLoader(win_size,dataset[-3:],25,mode)
         
     shuffle = False
     if mode == 'train':

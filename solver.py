@@ -138,7 +138,7 @@ class Solver(object):
 
         loss_1 = []
         loss_2 = []
-        for i, (input_data, _) in enumerate(vali_loader):
+        for i, (input_data, _,pos) in enumerate(vali_loader):
             input = input_data.float().to(self.device)
             
             output, series, prior, _ = self.model(input)
@@ -185,7 +185,7 @@ class Solver(object):
 
             epoch_time = time.time()
             self.model.train()
-            for i, (input_data, labels) in enumerate(self.train_loader):
+            for i, (input_data, labels,pos) in enumerate(self.train_loader):
                 # torch.save(input_data,str(i)+".tc")
                 self.optimizer.zero_grad()
                 iter_count += 1
@@ -197,7 +197,7 @@ class Solver(object):
                 reset_input[:,reset_index,:] = 0
                 # print(reset_input[0,reset_index,:])
                 # exit()
-                output, series, prior, _ = self.model(reset_input)
+                output, series, prior, _ = self.model(input)
                 # if flag == False:
                 #     print(output.shape,series[0].shape,prior[0].shape)
                 #     flag = True
@@ -258,7 +258,7 @@ class Solver(object):
 
         # (1) stastic on the train set
         attens_energy = []
-        for i, (input_data, labels) in enumerate(self.train_loader):
+        for i, (input_data, labels,pos) in enumerate(self.train_loader):
             input = input_data.float().to(self.device)
             output, series, prior, _ = self.model(input)
             loss = torch.mean(criterion(input, output), dim=-1)
@@ -293,7 +293,7 @@ class Solver(object):
 
         # (2) find the threshold
         attens_energy = []
-        for i, (input_data, labels) in enumerate(self.thre_loader):
+        for i, (input_data, labels,pos) in enumerate(self.thre_loader):
             input = input_data.float().to(self.device)
             output, series, prior, _ = self.model(input)
 
@@ -334,7 +334,7 @@ class Solver(object):
         # (3) evaluation on the test set
         test_labels = []
         attens_energy = []
-        for i, (input_data, labels) in enumerate(self.thre_loader):
+        for i, (input_data, labels,pos) in enumerate(self.thre_loader):
             input = input_data.float().to(self.device)
             output, series, prior, _ = self.model(input)
 
