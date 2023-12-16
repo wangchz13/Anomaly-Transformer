@@ -248,7 +248,9 @@ class Solver(object):
 
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         train_energy = np.array(attens_energy)
-
+        
+        
+        
         # (2) find the threshold
         attens_energy = []
         for i, (input_data, labels) in enumerate(self.thre_loader):
@@ -284,6 +286,7 @@ class Solver(object):
 
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         test_energy = np.array(attens_energy)
+        np.save("test_energy.npy",test_energy)
         combined_energy = np.concatenate([train_energy, test_energy], axis=0)
         thresh = np.percentile(combined_energy, 100 - self.anormly_ratio)
         print("Threshold :", thresh)

@@ -269,7 +269,7 @@ def get_loader_segment(data_path, batch_size, win_size=100, step=100, mode='trai
     elif (dataset == 'PSM'):
         dataset = PSMSegLoader(data_path, win_size, 1, mode)
     elif (dataset.startswith("UCR")):
-        dataset = UCRSegLoader(win_size,dataset[-3:],100,mode)
+        dataset = UCRSegLoader(win_size,dataset[-3:],1,mode)
     shuffle = False
     if mode == 'train':
         shuffle = True
