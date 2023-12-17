@@ -1,66 +1,103 @@
 {
-    // 使用 IntelliSense 了解相关属性。
-    // 悬停以查看现有属性的描述。
-    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "test",
-            "type": "python",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "--anormly_ratio",
-                "1",
-                "--num_epochs",
-                "10",
-                "--batch_size",
-                "16",
-                "--mode",
-                "test",
-                "--dataset",
-                "UCR_066",
-                "--data_path",
-                "dataset/UCR",
-                "--input_c",
-                "1",
-                "--output_c",
-                "1",
-                "--pretrained_model",
-                "20",
-                "--win_size",
-                "25"
-            ]
-        },
-        {
-            "name": "train",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "--anormly_ratio",
-                "1",
-                "--num_epochs",
-                "3",
-                "--batch_size",
-                "16",
-                "--mode",
-                "train",
-                "--dataset",
-                "UCR_066",
-                "--data_path",
-                "dataset/MSL",
-                "--input_c",
-                "1",
-                "--output_c",
-                "1",
-                "--win_size",
-                "25"
-            ]
-        }
-    ]
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "test",
+      "type": "python",
+      "request": "launch",
+      "program": "main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "--anormly_ratio",
+        "1",
+        "--num_epochs",
+        "10",
+        "--batch_size",
+        "16",
+        "--mode",
+        "test",
+        "--dataset",
+        "UCR_066",
+        "--data_path",
+        "dataset/UCR",
+        "--input_c",
+        "1",
+        "--output_c",
+        "1",
+        "--pretrained_model",
+        "20",
+        "--win_size",
+        "25"
+      ]
+    },
+    {
+      "name": "train_sin",
+      "type": "python",
+      "request": "launch",
+      "program": "main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "--anormly_ratio",
+        "1",
+        "--num_epochs",
+        "3",
+        "--batch_size",
+        "16",
+        "--mode",
+        "train",
+        "--dataset",
+        "SIN",
+        "--data_path",
+        "dataset/MSL",
+        "--input_c",
+        "1",
+        "--output_c",
+        "1",
+        "--win_size",
+        "32"
+      ]
+    },
+    {
+      "name": "test_sin",
+      "type": "python",
+      "request": "launch",
+      "program": "main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args":["--anormly_ratio","1","--num_epochs","10","--batch_size","16","--mode","test","--dataset","SIN","--data_path","dataset/MSL","--input_c","1","--output_c","1","--pretrained_model","20","--win_size","32"]
+    },
+    {
+        "name": "train_UCR",
+        "type": "python",
+        "request": "launch",
+        "program": "main.py",
+        "console": "integratedTerminal",
+        "justMyCode": true,
+        "args": [
+          "--anormly_ratio",
+          "1",
+          "--num_epochs",
+          "3",
+          "--batch_size",
+          "16",
+          "--mode",
+          "train",
+          "--dataset",
+          "UCR_066",
+          "--data_path",
+          "dataset/MSL",
+          "--input_c",
+          "1",
+          "--output_c",
+          "1",
+          "--win_size",
+          "25"
+        ]
+      }
+  ]
 }

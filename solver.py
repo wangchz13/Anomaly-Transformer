@@ -192,7 +192,7 @@ class Solver(object):
                 input = input_data.float().to(self.device)
                 reset_input = torch.clone(input)
                 l = input.shape[1]
-                reset_l = int(l*0.2)
+                reset_l = int(l*0.3)
                 reset_index = random.sample(range(l), reset_l)
                 reset_input[:,reset_index,:] = 0
                 # print(reset_input[0,reset_index,:])
@@ -212,8 +212,8 @@ class Solver(object):
                 # series_loss = series_loss / len(prior)
                 # # prior_loss = prior_loss / len(prior)
                 # prior_loss = series_loss.clone()
-                # rec_loss = self.criterion(output, input)
-                rec_loss = self.criterion(output,input,reset_index,3)
+                rec_loss = self.criterion(output, input)
+                # rec_loss = self.criterion(output,input,reset_index,3)
 
                 loss1_list.append((rec_loss - self.k * series_loss).item())
                 loss1 = rec_loss - self.k * series_loss
@@ -328,6 +328,7 @@ class Solver(object):
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         test_energy = np.array(attens_energy)
         combined_energy = np.concatenate([train_energy, test_energy], axis=0)
+        np.save("temp/combined_energy",combined_energy)
         thresh = np.percentile(combined_energy, 100 - self.anormly_ratio)
         print("Threshold :", thresh)
 
@@ -377,7 +378,9 @@ class Solver(object):
 
         print("pred:   ", pred.shape)
         print("gt:     ", gt.shape)
-
+        np.save("temp/sin_test_energy.npy",test_energy)
+        np.save("temp/gt.npy",gt)
+        np.save("temp/pred.npy",pred)
         # detection adjustment: please see this issue for more information https://github.com/thuml/Anomaly-Transformer/issues/14
         anomaly_state = False
         for i in range(len(gt)):
